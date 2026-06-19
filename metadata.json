@@ -1,0 +1,6 @@
+{
+  "name": "ArshVault",
+  "description": "An interactive, browser-based 3D Blueprint Sandbox Planner featuring dual 2D/3D dual-viewport editors for City and Floor planning with dynamic day/sunset/night cycles, procedural randomization, and persistent local storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
