@@ -375,7 +375,7 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
         <span className="font-bold text-cyan-400">{selectedFloorLevel}</span>
       </div>
 
-      <div className="flex-1 flex items-center justify-center w-full">
+      <div className="flex-1 flex justify-center w-full">
         <canvas
           ref={canvasRef}
           onMouseMove={handleMouseMove}
