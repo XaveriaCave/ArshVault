@@ -16,6 +16,7 @@ interface TwoDControlCanvasProps {
   onAddEntity: (entity: Omit<GridEntity, 'id'>) => void;
   onRemoveEntity: (id: string) => void;
   onUpdateEntityRotation: (id: string, nextRotation: number) => void;
+  onRotatePlacedItem: () => void;
   gridSize?: number;
 }
 
@@ -32,6 +33,7 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
   onAddEntity,
   onRemoveEntity,
   onUpdateEntityRotation,
+  onRotatePlacedItem,
   gridSize = 30,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -324,6 +326,24 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
         // Toggle rotational steps: 0 -> 90deg -> 180deg -> 270deg
         const nextRot = (occupying.rotation + Math.PI / 2) % (Math.PI * 2);
         onUpdateEntityRotation(occupying.id, nextRot);
+      } else if (selectedItemDef) {
+        // Empty cell: stamp the last-selected item using the current
+        // "rotate cursor" angle (placedRotation), then advance that
+        // cursor — mirrors the effect of repeatedly rotating a placed item.
+        const validBound =
+          gridX + selectedItemDef.gridWidth <= gridSize &&
+          gridZ + selectedItemDef.gridLength <= gridSize;
+        if (!validBound) return;
+
+        onAddEntity({
+          type: selectedItemDef.id,
+          gridX,
+          gridZ,
+          floorLevel: selectedFloorLevel,
+          rotation: placedRotation,
+        });
+
+        onRotatePlacedItem();
       }
     } else if (activeTool === 'inspect') {
       if (occupying) {

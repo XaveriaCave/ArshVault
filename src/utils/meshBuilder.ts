@@ -23,13 +23,13 @@ export function createItemMesh(
   const isStructure = itemDef.category === 'Structures';
   const baseStoreys = 10;
   // If entity.storeys is defined, we use it. Otherwise, default structures to 10 storeys.
-  const storeys = entity.storeys !== undefined 
-    ? entity.storeys 
+  const storeys = entity.storeys !== undefined
+    ? entity.storeys
     : (isStructure ? 10 : undefined);
-    
+
   // finalHeight scales itemDef.height proportionally based on the active storeys counter (relative to base 10 storeys)
   // If storeys is 0, give it a minor flat slab height of 0.15.
-  const finalHeight = storeys !== undefined 
+  const finalHeight = storeys !== undefined
     ? (storeys === 0 ? 0.15 : (storeys / baseStoreys) * itemDef.height)
     : itemDef.height;
 
@@ -79,7 +79,7 @@ export function createItemMesh(
   const secMat = createMaterial(secondaryColor, isDaylight ? 0.3 : 0.6, isDaylight ? 0.3 : 0.05);
   const darkMat = createMaterial(new THREE.Color(0x222222), 0.7, 0.4);
   const metalMat = createMaterial(new THREE.Color(0x90a4ae), 0.25, 0.85);
-  
+
   // Real glass mirror material for high-fidelity reflections during daylight
   const glassMat = new THREE.MeshStandardMaterial({
     color: isDaylight ? new THREE.Color(0x1976d2) : new THREE.Color(0x80deea),
@@ -383,7 +383,7 @@ export function createItemMesh(
         const neonRailL = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 2.9), glowMat);
         neonRailL.position.set(-0.38, 0.68 * bScale, 0.9);
         group.add(neonRailL);
-        
+
         // Right side neon rail
         const neonRailR = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 2.9), glowMat);
         neonRailR.position.set(0.38, 0.68 * bScale, 0.9);
@@ -395,7 +395,7 @@ export function createItemMesh(
         archL.position.set(-0.35, 1.3 * bScale, 0.9);
         archL.rotation.z = Math.PI / 2;
         group.add(archL);
-        
+
         const archR = archL.clone();
         archR.position.x = 0.35;
         group.add(archR);
@@ -1368,6 +1368,15 @@ export function createItemMesh(
       mesh.receiveShadow = true;
       group.add(mesh);
     }
+  }
+
+  // Apply rotation and coordinate translation based on placed entity config
+  if (itemDef.category === 'Walls') {
+    const wallThickness = 0.14;
+    const wallEdgeOffset = -(tileWidth / 2 - wallThickness / 2);
+    group.children.forEach((child) => {
+      child.position.z += wallEdgeOffset;
+    });
   }
 
   // Apply rotation and coordinate translation based on placed entity config

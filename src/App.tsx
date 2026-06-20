@@ -17,9 +17,12 @@ import {
   LayoutGrid,
   Monitor,
 } from 'lucide-react';
+import { LoadingOverlay } from './components/LoadingOverlay';
 
 export default function App() {
   // Navigation View Coordinator
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState('Compiling blueprint...');
   const [view, setView] = useState<'landing' | 'workspace'>('landing');
   const [mode, setMode] = useState<SandboxMode>('city');
 
@@ -62,7 +65,7 @@ export default function App() {
     try {
       const cityData = localStorage.getItem('gridcraft_blueprint_city');
       const floorData = localStorage.getItem('gridcraft_blueprint_floor');
-      
+
       if (cityData) {
         const parsed = JSON.parse(cityData);
         setSavedCityCount(Array.isArray(parsed) ? parsed.length : 0);
@@ -322,7 +325,7 @@ export default function App() {
 
   return (
     <div className="w-full min-h-screen bg-slate-950 flex flex-col overflow-hidden text-slate-100 font-sans antialiased">
-      
+
       {/* 1. Header Toolbar Controls */}
       <ControlToolbar
         mode={mode}
@@ -339,7 +342,7 @@ export default function App() {
 
       {/* 2. Primary Editor workspace columns split */}
       <div className="flex-1 flex overflow-hidden relative">
-        
+
         {/* SIDEBAR COMPONENT SELECTION (Hidden on mobile inside sliding drawer) */}
         {/* Desktop Sidebar Column */}
         <aside className="hidden lg:block w-[340px] shrink-0 border-r border-slate-850 h-full overflow-hidden">
@@ -399,7 +402,7 @@ export default function App() {
 
         {/* WORKSPACE DOUBLE PANEL SPLIT RENDERING */}
         <main className="flex-1 flex flex-col overflow-hidden bg-slate-900">
-          
+
           {/* Dynamic Environment Lighting Toolbar widget */}
           <EnvironmentalControls activePreset={environment} onSetPreset={setEnvironment} />
 
@@ -425,6 +428,7 @@ export default function App() {
                   onAddEntity={handleAddEntity}
                   onRemoveEntity={handleRemoveEntity}
                   onUpdateEntityRotation={handleUpdateEntityRotation}
+                  onRotatePlacedItem={handleRotatePreplaceItem}
                   gridSize={gridSize}
                 />
               </div>
@@ -455,17 +459,15 @@ export default function App() {
             <div className="flex bg-slate-950 border-b border-slate-850 py-1 px-2 gap-1 justify-around">
               <button
                 onClick={() => setMobileTab('2d')}
-                className={`flex-1 py-2 font-mono text-xs font-bold text-center rounded-lg transition-colors ${
-                  mobileTab === '2d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'
-                }`}
+                className={`flex-1 py-2 font-mono text-xs font-bold text-center rounded-lg transition-colors ${mobileTab === '2d' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-900'
+                  }`}
               >
                 2D COMPENSATOR
               </button>
               <button
                 onClick={() => setMobileTab('3d')}
-                className={`flex-1 py-2 font-mono text-xs font-bold text-center rounded-lg transition-colors ${
-                  mobileTab === '3d' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-900'
-                }`}
+                className={`flex-1 py-2 font-mono text-xs font-bold text-center rounded-lg transition-colors ${mobileTab === '3d' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-900'
+                  }`}
               >
                 3D RENDER CELL
               </button>
