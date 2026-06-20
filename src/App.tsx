@@ -304,6 +304,85 @@ export default function App() {
     }
   };
 
+  // EXPORT FULL BLUEPRINT STATE AS DOWNLOADABLE JSON
+  const handleExportJSON = () => {
+    try {
+      const payload = {
+        version: 1,
+        mode,
+        environment,
+        gridSize,
+        entities,
+        exportedAt: new Date().toISOString(),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `arshvault_${mode}_blueprint_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Blueprint exported as JSON file.', 'success');
+    } catch (e) {
+      console.error('Failed exporting JSON', e);
+      showToast('Failed to export blueprint JSON.', 'info');
+    }
+  };
+
+  // IMPORT BLUEPRINT STATE FROM A USER-SELECTED JSON FILE
+  const handleImportJSON = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+
+        if (!parsed || !Array.isArray(parsed.entities)) {
+          showToast('Invalid blueprint JSON — missing entities array.', 'info');
+          return;
+        }
+
+        // Basic shape validation on each entity before trusting it
+        const isValidEntity = (e: any) =>
+          e &&
+          typeof e.id === 'string' &&
+          typeof e.type === 'string' &&
+          typeof e.gridX === 'number' &&
+          typeof e.gridZ === 'number' &&
+          typeof e.floorLevel === 'number' &&
+          typeof e.rotation === 'number';
+
+        if (!parsed.entities.every(isValidEntity)) {
+          showToast('Blueprint JSON contains malformed entity records.', 'info');
+          return;
+        }
+
+        if (parsed.mode === 'city' || parsed.mode === 'floor') {
+          setMode(parsed.mode);
+        }
+
+        setEntities(parsed.entities);
+        setSelectedEntityId(null);
+
+        if (parsed.environment === 'day' || parsed.environment === 'night') {
+          setEnvironment(parsed.environment);
+        }
+
+        if (typeof parsed.gridSize === 'number' && parsed.gridSize >= 15 && parsed.gridSize <= 45) {
+          setGridSize(parsed.gridSize);
+        }
+
+        showToast(`Imported ${parsed.entities.length} elements from blueprint JSON.`, 'success');
+      } catch (e) {
+        console.error('Failed importing JSON', e);
+        showToast('Failed to parse blueprint JSON file — check file format.', 'info');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleBackToLanding = () => {
     setView('landing');
     updateSavedDraftCounts();
@@ -338,6 +417,8 @@ export default function App() {
         saveStatus={saveStatus}
         gridSize={gridSize}
         onSetGridSize={setGridSize}
+        onExportJSON={handleExportJSON}
+        onImportJSON={handleImportJSON}
       />
 
       {/* 2. Primary Editor workspace columns split */}

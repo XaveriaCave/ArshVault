@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GridEntity, SandboxMode, EnvironmentPreset, ItemDefinition } from '../types';
 import { CITY_ITEMS, FLOOR_ITEMS } from '../itemsRegistry';
 import { createItemMesh } from '../utils/meshBuilder';
-import { Maximize2, Minimize2, RotateCcw, Compass, Sun, Moon } from 'lucide-react';
+import { Maximize2, Minimize2, RotateCcw, Compass, Sun, Moon, Camera } from 'lucide-react';
 
 interface ThreeViewportProps {
   entities: GridEntity[];
@@ -63,6 +63,31 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
     }
   };
 
+  const handleDownloadImage = () => {
+    const renderer = rendererRef.current;
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
+    const canvas = canvasRef.current;
+    if (!renderer || !scene || !camera || !canvas) return;
+
+    // Force one extra render pass right before capture so the buffer
+    // definitely holds the most current frame, including the latest
+    // camera angle / selection highlight.
+    renderer.render(scene, camera);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `arshvault_${mode}_3dview_${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+
   // 1. Setup Resize Observer on parent container to follow custom guidelines
   useEffect(() => {
     if (!containerRef.current) return;
@@ -114,6 +139,7 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
       canvas: canvasRef.current,
       antialias: true,
       alpha: false,
+      preserveDrawingBuffer: true,
     });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -460,6 +486,15 @@ export const ThreeViewport: React.FC<ThreeViewportProps> = ({
 
       {/* Floating Panel Controls */}
       <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        <button
+          onClick={handleDownloadImage}
+          id="btn-capture-3d"
+          className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-slate-100 shadow-md backdrop-blur-sm transition-all hover:scale-105 active:scale-95 border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-center gap-1.5 text-xs font-mono"
+          title="Download current 3D view as PNG"
+        >
+          <Camera className="w-4 h-4 text-purple-500" />
+          <span>CAPTURE PNG</span>
+        </button>
         <button
           onClick={() => setIsFullscreen(!isFullscreen)}
           id="btn-toggle-fullscreen-3d"
