@@ -26,6 +26,7 @@ interface ControlToolbarProps {
   saveStatus: 'idle' | 'saving' | 'saved';
   gridSize: number;
   onSetGridSize: (size: number) => void;
+  isBusy?: boolean;
 }
 
 export const ControlToolbar: React.FC<ControlToolbarProps> = ({
@@ -39,12 +40,13 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
   saveStatus,
   gridSize,
   onSetGridSize,
+  isBusy = false,
 }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   return (
     <header className="w-full bg-slate-900 border-b border-slate-800 text-slate-100 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md z-25 relative">
-      
+
       {/* 1. LEFT BRAND ACTION & GATEWAY ANCHORS */}
       <div className="flex items-center gap-3">
         <button
@@ -74,7 +76,7 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
         <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
           <Layers className="w-4 h-4 text-blue-400" />
           <span className="text-xs font-bold font-mono text-slate-400">LAYER LEVEL:</span>
-          
+
           <div className="flex gap-1">
             {[0, 1, 2].map((lvl) => {
               const isSelected = selectedFloorLevel === lvl;
@@ -82,11 +84,10 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
                 <button
                   key={lvl}
                   onClick={() => onSelectFloorLevel(lvl)}
-                  className={`px-3 py-1 text-[11px] font-mono font-bold rounded-lg transition-all ${
-                    isSelected
-                      ? 'bg-blue-600 text-white shadow-inner scale-102 border border-blue-400'
-                      : 'bg-slate-850 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'
-                  }`}
+                  className={`px-3 py-1 text-[11px] font-mono font-bold rounded-lg transition-all ${isSelected
+                    ? 'bg-blue-600 text-white shadow-inner scale-102 border border-blue-400'
+                    : 'bg-slate-850 text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'
+                    }`}
                 >
                   {lvl === 0 ? '0 (Ground)' : `Lvl ${lvl}`}
                 </button>
@@ -99,7 +100,7 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
         <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-3">
           <LayoutGrid className="w-4 h-4 text-emerald-400" />
           <span className="text-xs font-bold font-mono text-slate-400">GRID SIZE:</span>
-          
+
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -129,7 +130,7 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
         </button>
 
         {/* RANDOMIZE / CHAOS BUTTON (FR-03) */}
-        <button
+        {/* <button
           onClick={onRandomize}
           id="btn-chaos"
           className="p-2.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-900 text-indigo-300 font-mono text-xs flex items-center justify-center gap-1.5 font-bold transition-all hover:scale-103 active:scale-97 cursor-pointer"
@@ -137,17 +138,58 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
         >
           <Sparkles className="w-4 h-4 text-indigo-400 animate-spin" style={{ animationDuration: '3s' }} />
           <span>CHAOS SPARK</span>
+        </button> */}
+        <button
+          onClick={onRandomize}
+          disabled={isBusy}
+          id="btn-chaos"
+          className={`p-2.5 rounded-xl border font-mono text-xs flex items-center justify-center gap-1.5 font-bold transition-all cursor-pointer ${isBusy
+              ? 'bg-slate-850 border-slate-800 text-slate-500 cursor-not-allowed'
+              : 'bg-indigo-950/80 hover:bg-indigo-900 border-indigo-900 text-indigo-300 hover:scale-103 active:scale-97'
+            }`}
+          title="Procedural Generative Chaos Spawning"
+        >
+          <Sparkles className={`w-4 h-4 ${isBusy ? 'text-slate-600 animate-spin' : 'text-indigo-400 animate-spin'}`} style={{ animationDuration: isBusy ? '0.6s' : '3s' }} />
+          <span>{isBusy ? 'WORKING...' : 'CHAOS SPARK'}</span>
+        </button>
+
+        <button
+          onClick={onSave}
+          disabled={isBusy}
+          id="btn-save-blueprint"
+          className={`p-2.5 rounded-xl border font-mono text-xs flex items-center justify-center gap-1.5 font-bold transition-all cursor-pointer ${isBusy
+              ? 'bg-slate-850 border-slate-800 text-slate-500 cursor-not-allowed'
+              : saveStatus === 'saved'
+                ? 'bg-emerald-950/80 border-emerald-500 text-emerald-400'
+                : 'bg-blue-600 hover:bg-blue-500 border-blue-400 text-white shadow-md hover:scale-103 active:scale-97'
+            }`}
+        >
+          {isBusy ? (
+            <>
+              <Save className="w-3.5 h-3.5 text-slate-600 animate-pulse" />
+              <span>WORKING...</span>
+            </>
+          ) : saveStatus === 'saved' ? (
+            <>
+              <CheckCircle className="w-4 h-4 text-emerald-400 animate-bounce" />
+              <span>SAVED!</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-3.5 h-3.5 text-white" />
+              <span>SAVE BLUEPRINT</span>
+            </>
+          )}
         </button>
 
         {/* SAVE BLUEPRINT Persistence (FR-04) */}
         <button
           onClick={onSave}
           id="btn-save-blueprint"
-          className={`p-2.5 rounded-xl border font-mono text-xs flex items-center justify-center gap-1.5 font-bold transition-all hover:scale-103 active:scale-97 cursor-pointer ${
-            saveStatus === 'saved'
-              ? 'bg-emerald-950/80 border-emerald-500 text-emerald-400'
-              : 'bg-blue-600 hover:bg-blue-500 border-blue-400 text-white shadow-md'
-          }`}
+          className={`p-2.5 rounded-xl border font-mono text-xs flex items-center justify-center gap-1.5 font-bold transition-all hover:scale-103 active:scale-97 cursor-pointer ${saveStatus === 'saved'
+            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-400'
+            : 'bg-blue-600 hover:bg-blue-500 border-blue-400 text-white shadow-md'
+            }`}
         >
           {saveStatus === 'saved' ? (
             <>
@@ -167,7 +209,7 @@ export const ControlToolbar: React.FC<ControlToolbarProps> = ({
       {showShortcutsModal && (
         <div className="fixed inset-0 bg-slate-950/75 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl p-6 relative overflow-hidden flex flex-col gap-4">
-            
+
             <button
               onClick={() => setShowShortcutsModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"

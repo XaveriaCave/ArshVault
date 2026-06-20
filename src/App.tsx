@@ -17,14 +17,44 @@ import {
   LayoutGrid,
   Monitor,
 } from 'lucide-react';
+import { useProcessingGate } from './hooks/useProcessingGate';
 import { LoadingOverlay } from './components/LoadingOverlay';
 
 export default function App() {
-  // Navigation View Coordinator
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const canvasGate = useProcessingGate(140);
+  const actionGate = useProcessingGate(180);
   const [loadingLabel, setLoadingLabel] = useState('Compiling blueprint...');
   const [view, setView] = useState<'landing' | 'workspace'>('landing');
   const [mode, setMode] = useState<SandboxMode>('city');
+
+  const gatedAddEntity = (entityData: Omit<GridEntity, 'id'>) =>
+    canvasGate.runOrDrop(() => handleAddEntity(entityData));
+
+  const gatedRemoveEntity = (id: string) =>
+    canvasGate.runOrDrop(() => handleRemoveEntity(id));
+
+  const gatedUpdateEntityRotation = (id: string, nextRotation: number) =>
+    canvasGate.runOrDrop(() => handleUpdateEntityRotation(id, nextRotation));
+
+  const gatedRandomize = () => {
+    setLoadingLabel('Spawning chaos elements...');
+    actionGate.enqueueLatest(handleRandomize);
+  };
+
+  const gatedSave = () => {
+    setLoadingLabel('Writing blueprint...');
+    actionGate.enqueueLatest(handleSave);
+  };
+
+  const gatedSelectMode = (selectedMode: SandboxMode, loadSaved: boolean) => {
+    setLoadingLabel(selectedMode === 'city' ? 'Booting city sandbox...' : 'Booting floor sandbox...');
+    actionGate.enqueueLatest(() => handleSelectMode(selectedMode, loadSaved));
+  };
+
+  const gatedBackToLanding = () => {
+    setLoadingLabel('Returning to gateway...');
+    actionGate.enqueueLatest(handleBackToLanding);
+  };
 
   // Entities & layout setups
   const [entities, setEntities] = useState<GridEntity[]>([]);
@@ -523,6 +553,7 @@ export default function App() {
           <span className="font-semibold text-slate-200">{toast.message}</span>
         </div>
       )}
+      <LoadingOverlay visible={actionGate.isBusy} label={loadingLabel} />
     </div>
   );
 }

@@ -17,6 +17,7 @@ interface TwoDControlCanvasProps {
   onRemoveEntity: (id: string) => void;
   onUpdateEntityRotation: (id: string, nextRotation: number) => void;
   onRotatePlacedItem: () => void;
+  isLocked?: boolean;
   gridSize?: number;
 }
 
@@ -34,6 +35,7 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
   onRemoveEntity,
   onUpdateEntityRotation,
   onRotatePlacedItem,
+  isLocked = false,
   gridSize = 30,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -395,7 +397,7 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
         <span className="font-bold text-cyan-400">{selectedFloorLevel}</span>
       </div>
 
-      <div className="flex-1 flex justify-center w-full">
+      {/* <div className="flex-1 flex justify-center w-full">
         <canvas
           ref={canvasRef}
           onMouseMove={handleMouseMove}
@@ -403,6 +405,29 @@ export const TwoDControlCanvas: React.FC<TwoDControlCanvasProps> = ({
           onClick={handleCanvasAction}
           className="border-2 border-slate-300 dark:border-slate-800 rounded-xl shadow-lg cursor-crosshair max-w-full max-h-full"
         />
+      </div> */}
+      <div className="flex-1 flex justify-center w-full relative">
+        <canvas
+          ref={canvasRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleCanvasAction}
+          className={`border-2 rounded-xl shadow-lg max-w-full max-h-full transition-all ${isLocked
+            ? 'border-amber-500/70 cursor-wait opacity-80'
+            : 'border-slate-300 dark:border-slate-800 cursor-crosshair'
+            }`}
+        />
+
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="px-3 py-1.5 rounded-full bg-slate-900/90 border border-amber-500/50 flex items-center gap-2 shadow-lg backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-amber-400 lock-pulse" />
+              <span className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wide">
+                Catching up...
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mini Helper Controls Legend bar underneath */}
